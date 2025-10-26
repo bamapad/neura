@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neura Vaults Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap');
+        
+        :root {
+            --primary: #000000;
+            --secondary: #ffffff;
+            --accent: #00ff9d;
+        }
+        
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: var(--primary);
+            color: var(--secondary);
+            overflow-x: hidden;
+        }
+        
+        .spring {
+            position: absolute;
+            width: 20px;
+            height: 100px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.7;
+            z-index: -1;
+            animation: float 8s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+        }
+        
+        .quiz-container {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 30px rgba(0, 255, 157, 0.2);
+        }
+        
+        .option:hover {
+            transform: translateX(10px);
+            box-shadow: 0 0 15px var(--accent);
+        }
+        
+        .progress-bar {
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+        }
+        
+        .terminal-text {
+            font-family: 'Courier New', monospace;
+            color: var(--accent);
+        }
+        
+        .glow {
+            text-shadow: 0 0 10px var(--accent);
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 relative">
+    <!-- 3D Spring Elements -->
+    <div class="spring" style="left: 10%; top: 20%; animation-delay: 0s;"></div>
+    <div class="spring" style="left: 25%; top: 60%; animation-delay: 1s;"></div>
+    <div class="spring" style="left: 75%; top: 30%; animation-delay: 2s;"></div>
+    <div class="spring" style="left: 90%; top: 70%; animation-delay: 3s;"></div>
+    <div class="spring" style="left: 50%; top: 10%; animation-delay: 4s;"></div>
+    
+    <!-- Main Quiz Container -->
+    <div class="quiz-container w-full max-w-4xl rounded-xl p-6 md:p-8 relative overflow-hidden">
+        <!-- Header -->
+        <div class="flex flex-col items-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2 text-center glow">NEURA VAULTS QUIZ</h1>
+            <p class="terminal-text text-sm mb-4">SYSTEM STATUS: <span class="pulse">ONLINE</span></p>
+            <div class="w-full bg-gray-800 rounded-full h-2.5 mb-4">
+                <div class="progress-bar h-2.5 rounded-full" style="width: 5%"></div>
+            </div>
+        </div>
+        
+        <!-- Quiz Content -->
+        <div id="quiz-content" class="transition-all duration-500">
+            <!-- Welcome Screen -->
+            <div id="welcome-screen" class="text-center">
+                <h2 class="text-2xl font-bold mb-6">TEST YOUR KNOWLEDGE ON SELF-EVOLVING LIQUIDITY VAULTS</h2>
+                <p class="mb-8 text-gray-300">This 20-question multiple-choice quiz will assess your understanding of the Neura Vaults project.</p>
+                <button id="start-btn" class="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg hover:bg-white hover:text-black transition-all duration-300 font-bold tracking-wider">
+                    INITIATE QUIZ
+                </button>
+            </div>
+            
+            <!-- Question Screen (hidden initially) -->
+            <div id="question-screen" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <span id="question-number" class="terminal-text">QUESTION 1/20</span>
+                    <span id="timer" class="terminal-text">TIME: ∞</span>
+                </div>
+                
+                <h2 id="question-text" class="text-xl md:text-2xl font-medium mb-8"></h2>
+                
+                <div id="options-container" class="space-y-4 mb-8">
+                    <!-- Options will be inserted here by JavaScript -->
+                </div>
+                
+                <div class="flex justify-between">
+                    <button id="prev-btn" class="bg-transparent border border-white text-white px-4 py-2 rounded opacity-50 cursor-not-allowed" disabled>
+                        ← PREV
+                    </button>
+                    <button id="next-btn" class="bg-white text-black px-6 py-2 rounded font-bold">
+                        NEXT →
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Results Screen (hidden initially) -->
+            <div id="results-screen" class="hidden text-center">
+                <h2 class="text-3xl font-bold mb-6 glow">QUIZ COMPLETE</h2>
+                <div class="terminal-text text-5xl font-bold mb-8" id="score-display">0/20</div>
+                
+                <div id="score-message" class="mb-8">
+                    <!-- Score message will be inserted here -->
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 text-left">
+                    <div>
+                        <h3 class="font-bold mb-2">CORRECT ANSWERS:</h3>
+                        <ol id="correct-answers" class="list-decimal pl-5 space-y-1 text-green-400">
+                            <!-- Correct answers will be inserted here -->
+                        </ol>
+                    </div>
+                    <div>
+                        <h3 class="font-bold mb-2">YOUR ANSWERS:</h3>
+                        <ol id="user-answers" class="list-decimal pl-5 space-y-1">
+                            <!-- User answers will be inserted here -->
+                        </ol>
+                    </div>
+                </div>
+                
+                <button id="restart-btn" class="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg hover:bg-white hover:text-black transition-all duration-300 font-bold tracking-wider">
+                    RESTART QUIZ
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="mt-8 text-center text-gray-500 text-sm">
+        <p>Neura Vaults - The Future of Self-Evolving Liquidity</p>
+    </div>
+
+    <script>
+        // Quiz data
+        const quizData = [
+            {
+                question: "What is the core concept behind Neura Vaults?",
+                options: [
+                    "Centralized trading bots for spot markets",
+                    "Self-evolving liquidity vaults managed by AI",
+                    "Static staking pools for stablecoins",
+                    "Cross-chain bridges for NFT transfers"
+                ],
+                answer: 1
+            },
+            {
+                question: "On which blockchain is Neura Vaults primarily built?",
+                options: [
+                    "Ethereum Mainnet",
+                    "Solana",
+                    "HyperEVM",
+                    "Binance Smart Chain"
+                ],
+                answer: 2
+            },
+            {
+                question: "What standard does Neura Vaults extend to enable its vault functionality?",
+                options: [
+                    "ERC-20",
+                    "ERC-721",
+                    "ERC-4626",
+                    "ERC-777"
+                ],
+                answer: 2
+            },
+            {
+                question: "According to the project's pinned post, what sparked the creation of Neura Vaults?",
+                options: [
+                    "A failed manual liquidity strategy",
+                    "A question about AI managing liquidity better than humans",
+                    "Regulatory changes in DeFi lending",
+                    "A partnership with a major exchange"
+                ],
+                answer: 1
+            },
+            {
+                question: "What is the primary function of Neura Vaults' AI management?",
+                options: [
+                    "Predicting token prices for trading",
+                    "Rebalancing liquidity across lending protocols",
+                    "Generating memes for community engagement",
+                    "Auditing smart contracts automatically"
+                ],
+                answer: 1
+            },
+            {
+                question: "What does 'self-custodial' mean in the context of Neura Vaults?",
+                options: [
+                    "Users must pay custody fees to the team",
+                    "Users retain full control of their private keys and assets",
+                    "Assets are locked in a multi-sig wallet controlled by the project",
+                    "Custody is shared between AI and human operators"
+                ],
+                answer: 1
+            },
+            {
+                question: "ERC-7540, as used in Neura Vaults, primarily introduces what innovation?",
+                options: [
+                    "Instant token burns for deflation",
+                    "Asynchronous fulfillment for deposits and withdrawals",
+                    "Mandatory KYC verification for users",
+                    "Built-in oracle feeds for price data"
+                ],
+                answer: 1
+            },
+            {
+                question: "How does Neura Vaults handle deposit and withdrawal requests under ERC-7540?",
+                options: [
+                    "They are processed off-chain for speed",
+                    "Each request is recorded on-chain but settled asynchronously",
+                    "They require immediate on-chain confirmation",
+                    "They are batched weekly for efficiency"
+                ],
+                answer: 1
+            },
+            {
+                question: "What phase is Neura Vaults currently in, based on recent updates?",
+                options: [
+                    "Full public launch",
+                    "Early access with 90% progress",
+                    "Beta testing closed to all",
+                    "Post-audit maintenance"
+                ],
+                answer: 1
+            },
+            {
+                question: "What type of DeFi activity does Neura Vaults focus on optimizing?",
+                options: [
+                    "Yield farming on exotic tokens",
+                    "Liquidity provision in lending protocols",
+                    "Perpetual futures trading",
+                    "Governance voting mechanisms"
+                ],
+                answer: 1
+            },
+            {
+                question: "The project's Twitter handle emphasizes 'self-evolving' vaults—what does this imply?",
+                options: [
+                    "Vaults that change their code automatically without audits",
+                    "AI-driven adaptation to market conditions for better efficiency",
+                    "User-voted evolutions every quarter",
+                    "Integration with evolving NFT standards"
+                ],
+                answer: 1
+            },
+            {
+                question: "In a recent post, Neura Vaults mentioned dealing with what post-Discord launch?",
+                options: [
+                    "Server overload from too many users",
+                    "Coordinated bot activity and fake accounts",
+                    "Integration bugs with HyperEVM",
+                    "Giveaway scams targeting members"
+                ],
+                answer: 1
+            },
+            {
+                question: "What benefit does asynchronous fulfillment provide to Neura Vaults users?",
+                options: [
+                    "Lower gas fees during peak times",
+                    "Flexibility without requiring instant settlements",
+                    "Automatic compounding of rewards",
+                    "Enhanced security through delays"
+                ],
+                answer: 1
+            },
+            {
+                question: "Neura Vaults positions itself as the future of vaults—why asynchronous over synchronous?",
+                options: [
+                    "To reduce computational load on HyperEVM",
+                    "Because traditional instant settlements limit complex strategies",
+                    "To comply with global time zone differences",
+                    "For better integration with legacy systems"
+                ],
+                answer: 1
+            },
+            {
+                question: "What is the project's goal in building a Discord community?",
+                options: [
+                    "Hosting daily trading competitions",
+                    "Creating a space for genuine early supporters",
+                    "Selling exclusive merchandise",
+                    "Conducting mandatory user surveys"
+                ],
+                answer: 1
+            },
+            {
+                question: "How many posts has the @Neuravaults Twitter account made as of the latest check?",
+                options: [
+                    "Around 50",
+                    "124",
+                    "Over 200",
+                    "Less than 20"
+                ],
+                answer: 1
+            },
+            {
+                question: "What makes Neura Vaults unique compared to standard ERC-4626 vaults?",
+                options: [
+                    "It adds AI rebalancing and async operations",
+                    "It supports only USDC deposits",
+                    "It requires team approval for withdrawals",
+                    "It focuses solely on spot trading"
+                ],
+                answer: 0
+            },
+            {
+                question: "In the 'SYSTEM BOOTING' update, what was the progress indicator?",
+                options: [
+                    "50%",
+                    "90%",
+                    "100%",
+                    "75%"
+                ],
+                answer: 1
+            },
+            {
+                question: "What risk does Neura Vaults aim to mitigate through AI management?",
+                options: [
+                    "Smart contract exploits",
+                    "Inefficient human-managed liquidity allocation",
+                    "Network congestion on HyperEVM",
+                    "Token volatility from external markets"
+                ],
+                answer: 1
+            },
+            {
+                question: "The project's Linktree (linktr.ee/neuravaults) likely points to what?",
+                options: [
+                    "Only the Twitter profile",
+                    "Official resources like docs, Discord, and website",
+                    "A merchandise store",
+                    "Partner affiliate links"
+                ],
+                answer: 1
+            }
+        ];
+
+        // DOM Elements
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const questionScreen = document.getElementById('question-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const questionNumber = document.getElementById('question-number');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreDisplay = document.getElementById('score-display');
+        const scoreMessage = document.getElementById('score-message');
+        const correctAnswersList = document.getElementById('correct-answers');
+        const userAnswersList = document.getElementById('user-answers');
+        const progressBar = document.querySelector('.progress-bar');
+
+        // Quiz state
+        let currentQuestion = 0;
+        let userAnswers = Array(quizData.length).fill(null);
+        let score = 0;
+
+        // Start quiz
+        startBtn.addEventListener('click', () => {
+            welcomeScreen.classList.add('hidden');
+            questionScreen.classList.remove('hidden');
+            showQuestion();
+        });
+
+        // Restart quiz
+        restartBtn.addEventListener('click', () => {
+            currentQuestion = 0;
+            userAnswers = Array(quizData.length).fill(null);
+            score = 0;
+            
+            resultsScreen.classList.add('hidden');
+            questionScreen.classList.remove('hidden');
+            showQuestion();
+        });
+
+        // Show current question
+        function showQuestion() {
+            const question = quizData[currentQuestion];
+            
+            // Update question number and text
+            questionNumber.textContent = `QUESTION ${currentQuestion + 1}/${quizData.length}`;
+            questionText.textContent = question.question;
+            
+            // Update progress bar
+            const progress = ((currentQuestion) / quizData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            
+            // Enable/disable previous button
+            prevBtn.disabled = currentQuestion === 0;
+            prevBtn.classList.toggle('opacity-50', currentQuestion === 0);
+            prevBtn.classList.toggle('cursor-not-allowed', currentQuestion === 0);
+            
+            // Update next button text
+            nextBtn.textContent = currentQuestion === quizData.length - 1 ? 'SUBMIT →' : 'NEXT →';
+            
+            // Clear previous options
+            optionsContainer.innerHTML = '';
+            
+            // Add new options
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = `option p-4 border border-gray-700 rounded-lg cursor-pointer transition-all duration-300 ${userAnswers[currentQuestion] === index ? 'bg-gray-800 border-white' : ''}`;
+                optionElement.innerHTML = `
+                    <span class="font-bold mr-2">${String.fromCharCode(65 + index)}.</span>
+                    <span>${option}</span>
+                `;
+                
+                optionElement.addEventListener('click', () => {
+                    // Remove selection from all options
+                    document.querySelectorAll('.option').forEach(opt => {
+                        opt.classList.remove('bg-gray-800', 'border-white');
+                    });
+                    
+                    // Add selection to clicked option
+                    optionElement.classList.add('bg-gray-800', 'border-white');
+                    
+                    // Save user's answer
+                    userAnswers[currentQuestion] = index;
+                });
+                
+                optionsContainer.appendChild(optionElement);
+            });
+        }
+
+        // Navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            // Check if answer is selected
+            if (userAnswers[currentQuestion] === null && currentQuestion !== quizData.length - 1) {
+                alert('Please select an answer before proceeding.');
+                return;
+            }
+            
+            if (currentQuestion < quizData.length - 1) {
+                currentQuestion++;
+                showQuestion();
+            } else {
+                // Calculate score
+                score = 0;
+                for (let i = 0; i < quizData.length; i++) {
+                    if (userAnswers[i] === quizData[i].answer) {
+                        score++;
+                    }
+                }
+                
+                // Show results
+                showResults();
+            }
+        });
+
+        // Show results
+        function showResults() {
+            questionScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            
+            // Update score display
+            scoreDisplay.textContent = `${score}/${quizData.length}`;
+            
+            // Update score message
+            let message = '';
+            if (score >= 16) {
+                message = 'DeFi AI Expert—You\'re ready to boot up a vault!';
+            } else if (score >= 11) {
+                message = 'Solid Contributor—Join the Discord for more insights.';
+            } else if (score >= 6) {
+                message = 'Emerging Supporter—Dive into the pinned post.';
+            } else {
+                message = 'New Explorer—Start with the bio on Twitter.';
+            }
+            scoreMessage.innerHTML = `<p class="text-xl font-bold mb-2">${message}</p>`;
+            
+            // Show correct answers and user answers
+            correctAnswersList.innerHTML = '';
+            userAnswersList.innerHTML = '';
+            
+            for (let i = 0; i < quizData.length; i++) {
+                const correctLi = document.createElement('li');
+                correctLi.textContent = `${String.fromCharCode(65 + quizData[i].answer)}. ${quizData[i].options[quizData[i].answer]}`;
+                correctAnswersList.appendChild(correctLi);
+                
+                const userLi = document.createElement('li');
+                if (userAnswers[i] !== null) {
+                    userLi.textContent = `${String.fromCharCode(65 + userAnswers[i])}. ${quizData[i].options[userAnswers[i]]}`;
+                    userLi.className = userAnswers[i] === quizData[i].answer ? 'text-green-400' : 'text-red-400';
+                } else {
+                    userLi.textContent = 'No answer selected';
+                    userLi.className = 'text-gray-400';
+                }
+                userAnswersList.appendChild(userLi);
+            }
+        }
+
+        // Add some terminal-like effects
+        const terminalElements = document.querySelectorAll('.terminal-text');
+        terminalElements.forEach(el => {
+            const text = el.textContent;
+            el.textContent = '';
+            
+            let i = 0;
+            const typingEffect = setInterval(() => {
+                if (i < text.length) {
+                    el.textContent += text.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(typingEffect);
+                }
+            }, 50);
+        });
+    </script>
+</body>
+</html>
